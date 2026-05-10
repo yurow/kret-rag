@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG 查询测试页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .result-score {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .result-content {
+            color: #555;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .result-meta {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            border-left: 4px solid #ff6b6b;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .json-output {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+
+        .answer-section {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .answer-title {
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .answer-content {
+            color: #1b5e20;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .sources-list {
+            margin-top: 15px;
+        }
+
+        .source-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #4caf50;
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .source-id {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .source-score {
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .source-content {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 RAG 查询测试平台</h1>
+            <p>可视化测试 RAG 系统的检索、重写和问答功能</p>
+        </div>
+
+        <div class="content">
+            <!-- 查询输入 -->
+            <div class="form-group">
+                <label for="query">查询问题</label>
+                <textarea id="query" placeholder="请输入您的问题，例如：什么是机器学习的优势？"></textarea>
+            </div>
+
+            <!-- 参数配置 -->
+            <div class="form-group">
+                <label for="topK">返回结果数量 (top_k)</label>
+                <input type="number" id="topK" value="5" min="1" max="20">
+            </div>
+
+            <div class="form-group">
+                <label for="scoreThreshold">相似度阈值 (score_threshold)</label>
+                <input type="number" id="scoreThreshold" value="0.7" min="0" max="1" step="0.1">
+            </div>
+
+            <!-- 功能开关 -->
+            <div class="form-group">
+                <label>功能选项</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="useHybrid" checked>
+                        <label for="useHybrid" style="margin: 0;">混合检索 (BM25 + 向量)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="useRerank" checked>
+                        <label for="useRerank" style="margin: 0;">Rerank 重排序</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="useQueryRewrite" checked>
+                        <label for="useQueryRewrite" style="margin: 0;">查询重写</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="button-group">
+                <button class="btn-primary" onclick="testFullQuery()">
+                    🚀 完整查询 (推荐)
+                </button>
+                <button class="btn-success" onclick="testSearchOnly()">
+                    🔎 仅向量搜索
+                </button>
+                <button class="btn-info" onclick="testGenerateAnswer()">
+                    💬 RAG 生成回答
+                </button>
+                <button class="btn-warning" onclick="clearResults()">
+                    🗑️ 清空结果
+                </button>
+            </div>
+
+            <!-- 加载状态 -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>正在处理查询...</p>
+            </div>
+
+            <!-- 错误信息 -->
+            <div class="error-message" id="errorMessage"></div>
+
+            <!-- 统计信息 -->
+            <div class="stats" id="statsSection" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalResults">0</div>
+                    <div class="stat-label">结果数量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="queryTime">0ms</div>
+                    <div class="stat-label">查询耗时</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avgScore">0</div>
+                    <div class="stat-label">平均相似度</div>
+                </div>
+            </div>
+
+            <!-- 结果展示区域 -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2 style="margin-bottom: 20px; color: #333;">查询结果</h2>
+
+                <!-- 上下文信息 -->
+                <div id="contextInfo" style="display: none; margin-bottom: 20px;">
+                    <div class="result-card" style="border-left-color: #4facfe;">
+                        <div class="result-title">📄 构建的上下文</div>
+                        <div class="result-content" id="contextContent" style="margin-top: 10px;"></div>
+                    </div>
+                </div>
+
+                <!-- 检索结果列表 -->
+                <div id="resultsList"></div>
+
+                <!-- 查询重写信息 -->
+                <div id="rewriteInfo" style="display: none; margin-bottom: 20px;">
+                    <div class="result-card" style="border-left-color: #fa709a;">
+                        <div class="result-title">📝 查询重写</div>
+                        <div style="margin-top: 10px;">
+                            <strong>原始查询：</strong><span id="originalQuery"></span>
+                        </div>
+                        <div style="margin-top: 8px;">
+                            <strong>重写后查询：</strong><span id="rewrittenQuery"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- LLM 回答 -->
+                <div id="answerSection" style="display: none;">
+                    <div class="answer-section">
+                        <div class="answer-title">🤖 AI 回答</div>
+                        <div class="answer-content" id="answerContent"></div>
+                        
+                        <div class="sources-list" id="sourcesList">
+                            <h3 style="margin: 15px 0 10px; color: #2e7d32; font-size: 14px;">引用来源</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSON 原始响应 -->
+                <div style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 10px; color: #333; font-size: 16px;">JSON 响应</h3>
+                    <div class="json-output" id="jsonOutput"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('errorMessage').classList.remove('active');
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('active');
+            hideLoading();
+        }
+
+        // 获取请求参数
+        function getRequestParams() {
+            return {
+                query: document.getElementById('query').value.trim(),
+                top_k: parseInt(document.getElementById('topK').value),
+                score_threshold: parseFloat(document.getElementById('scoreThreshold').value),
+                use_hybrid: document.getElementById('useHybrid').checked,
+                use_rerank: document.getElementById('useRerank').checked,
+                use_query_rewrite: document.getElementById('useQueryRewrite').checked
+            };
+        }
+
+        // 验证输入
+        function validateInput() {
+            const query = document.getElementById('query').value.trim();
+            if (!query) {
+                showError('请输入查询问题');
+                return false;
+            }
+            return true;
+        }
+
+        // 格式化 JSON
+        function formatJSON(data) {
+            return JSON.stringify(data, null, 2);
+        }
+
+        // 更新统计信息
+        function updateStats(results, queryTime) {
+            document.getElementById('totalResults').textContent = results.length;
+            document.getElementById('queryTime').textContent = `${queryTime.toFixed(2)}ms`;
+            
+            if (results.length > 0) {
+                const avgScore = results.reduce((sum, r) => sum + (r.score || r.similarity_score || 0), 0) / results.length;
+                document.getElementById('avgScore').textContent = avgScore.toFixed(3);
+            } else {
+                document.getElementById('avgScore').textContent = '0';
+            }
+            
+            document.getElementById('statsSection').style.display = 'grid';
+        }
+
+        // 渲染结果卡片
+        function renderResultCard(result, index) {
+            const score = result.score || result.similarity_score || 0;
+            const metadata = result.metadata || {};
+            
+            return `
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-title">[引用 ${index + 1}] 文档片段</div>
+                        <div class="result-score">${(score * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="result-content">${escapeHtml(result.content)}</div>
+                    <div class="result-meta">
+                        <div>文档ID: ${result.document_id}</div>
+                        <div>分块ID: ${result.chunk_id}</div>
+                        ${metadata.file_name ? `<div>文件名: ${metadata.file_name}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 完整查询测试
+        async function testFullQuery() {
+            if (!validateInput()) return;
+
+            showLoading();
+            
+            try {
+                const params = getRequestParams();
+                const response = await fetch(`${API_BASE}/query/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || '查询失败');
+                }
+
+                const data = await response.json();
+                displayResults(data, 'full');
+            } catch (error) {
+                showError(`查询失败: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 仅向量搜索测试
+        async function testSearchOnly() {
+            if (!validateInput()) return;
+
+            showLoading();
+            
+            try {
+                const params = getRequestParams();
+                const response = await fetch(`${API_BASE}/query/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || '搜索失败');
+                }
+
+                const data = await response.json();
+                displayResults({
+                    results: data.results,
+                    total: data.total,
+                    query_time: 0,
+                    context: null,
+                    original_query: null,
+                    rewritten_query: null
+                }, 'search');
+            } catch (error) {
+                showError(`搜索失败: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // RAG 生成回答测试（流式版本）
+        async function testGenerateAnswer() {
+            if (!validateInput()) return;
+
+            showLoading();
+            
+            try {
+                const params = getRequestParams();
+                
+                // 使用 EventSource 进行流式请求
+                const response = await fetch(`${API_BASE}/query/generate/stream`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || '生成回答失败');
+                }
+
+                // 准备显示区域
+                const resultsSection = document.getElementById('resultsSection');
+                const answerSection = document.getElementById('answerSection');
+                const answerContent = document.getElementById('answerContent');
+                const sourcesList = document.getElementById('sourcesList');
+                
+                // 清空之前的内容
+                answerContent.textContent = '';
+                sourcesList.innerHTML = '';
+                answerSection.style.display = 'block';
+                resultsSection.style.display = 'block';
+                
+                // 隐藏加载状态但保持结果区域可见
+                hideLoading();
+                
+                // 读取流式数据
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let fullAnswer = '';
+                let retrievalData = null;
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop() || '';
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                
+                                if (data.type === 'retrieval') {
+                                    // 检索完成
+                                    retrievalData = data.data;
+                                    updateStats([], retrievalData.query_time);
+                                    
+                                    // 显示统计信息
+                                    document.getElementById('statsSection').style.display = 'grid';
+                                    
+                                    // 显示查询重写信息
+                                    const rewriteInfo = document.getElementById('rewriteInfo');
+                                    if (retrievalData.original_query && retrievalData.rewritten_query) {
+                                        document.getElementById('originalQuery').textContent = retrievalData.original_query;
+                                        document.getElementById('rewrittenQuery').textContent = retrievalData.rewritten_query;
+                                        rewriteInfo.style.display = 'block';
+                                    } else {
+                                        rewriteInfo.style.display = 'none';
+                                    }
+                                    
+                                    // 显示上下文信息
+                                    const contextInfo = document.getElementById('contextInfo');
+                                    if (retrievalData.context) {
+                                        document.getElementById('contextContent').textContent = retrievalData.context;
+                                        contextInfo.style.display = 'block';
+                                    } else {
+                                        contextInfo.style.display = 'none';
+                                    }
+                                } else if (data.type === 'chunk') {
+                                    // 接收文本块
+                                    const content = data.data.content || '';
+                                    fullAnswer += content;
+                                    answerContent.textContent = fullAnswer;
+                                    
+                                    // 自动滚动到底部
+                                    answerContent.scrollTop = answerContent.scrollHeight;
+                                    
+                                    // 调试日志
+                                    console.log(`[Chunk] 收到文本块: "${content.substring(0, 20)}...", 当前总长度: ${fullAnswer.length}`);
+                                } else if (data.type === 'complete') {
+                                    // 完成，显示来源和JSON
+                                    const completeData = data.data;
+                                    
+                                    // 调试日志
+                                    console.log('[Complete] 收到完整数据:', {
+                                        answer_length: completeData.answer ? completeData.answer.length : 0,
+                                        answer_preview: completeData.answer ? completeData.answer.substring(0, 50) : 'null',
+                                        sources_count: completeData.sources ? completeData.sources.length : 0,
+                                        fullAnswer_length: fullAnswer.length
+                                    });
+                                    
+                                    // ⭐ 确保显示AI回答（如果之前流式输出没有显示）
+                                    if (completeData.answer && !fullAnswer) {
+                                        console.log('[Complete] 使用complete中的answer（之前为空）');
+                                        fullAnswer = completeData.answer;
+                                        answerContent.textContent = fullAnswer;
+                                    } else if (completeData.answer && completeData.answer !== fullAnswer) {
+                                        console.log('[Complete] 更新answer（与累积的不同）');
+                                        fullAnswer = completeData.answer;
+                                        answerContent.textContent = fullAnswer;
+                                    } else {
+                                        console.log('[Complete] 保持累积的answer');
+                                    }
+                                    
+                                    // ⭐ 显示查询重写信息（如果之前没显示）
+                                    const rewriteInfo = document.getElementById('rewriteInfo');
+                                    if (completeData.original_query && completeData.rewritten_query && rewriteInfo.style.display === 'none') {
+                                        document.getElementById('originalQuery').textContent = completeData.original_query;
+                                        document.getElementById('rewrittenQuery').textContent = completeData.rewritten_query;
+                                        rewriteInfo.style.display = 'block';
+                                    }
+                                    
+                                    // 显示引用来源
+                                    if (completeData.sources && completeData.sources.length > 0) {
+                                        sourcesList.innerHTML = '<h3 style="margin: 15px 0 10px; color: #2e7d32; font-size: 14px;">引用来源</h3>' +
+                                            completeData.sources.map(source => `
+                                                <div class="source-item">
+                                                    <div class="source-header">
+                                                        <div class="source-id">[${source.chunk_id}]</div>
+                                                        <div class="source-score">${(source.score * 100).toFixed(1)}%</div>
+                                                    </div>
+                                                    <div class="source-content">${escapeHtml(source.content)}</div>
+                                                </div>
+                                            `).join('');
+                                    }
+                                    
+                                    // 显示系统提示词
+                                    if (completeData.system_prompt) {
+                                        const systemPromptSection = document.createElement('div');
+                                        systemPromptSection.className = 'result-card';
+                                        systemPromptSection.style.cssText = 'border-left-color: #9c27b0; margin-top: 15px;';
+                                        systemPromptSection.innerHTML = `
+                                            <div class="result-title">🔧 系统提示词</div>
+                                            <div class="result-content" style="margin-top: 10px; white-space: pre-wrap; font-size: 13px; max-height: 300px; overflow-y: auto;">${escapeHtml(completeData.system_prompt)}</div>
+                                        `;
+                                        answerSection.appendChild(systemPromptSection);
+                                    }
+                                    
+                                    // 显示 JSON 响应
+                                    const jsonOutput = document.getElementById('jsonOutput');
+                                    jsonOutput.textContent = formatJSON(completeData);
+                                } else if (data.type === 'error') {
+                                    showError(`流式生成错误: ${data.data.message}`);
+                                }
+                            } catch (e) {
+                                console.error('解析SSE数据失败:', e);
+                            }
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                showError(`生成回答失败: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 显示结果
+        function displayResults(data, type) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsList = document.getElementById('resultsList');
+            const jsonOutput = document.getElementById('jsonOutput');
+
+            // 更新统计信息
+            updateStats(data.results || [], data.query_time || 0);
+
+            // 显示查询重写信息
+            const rewriteInfo = document.getElementById('rewriteInfo');
+            if (data.original_query && data.rewritten_query) {
+                document.getElementById('originalQuery').textContent = data.original_query;
+                document.getElementById('rewrittenQuery').textContent = data.rewritten_query;
+                rewriteInfo.style.display = 'block';
+            } else {
+                rewriteInfo.style.display = 'none';
+            }
+
+            // 显示上下文信息
+            const contextInfo = document.getElementById('contextInfo');
+            if (data.context) {
+                document.getElementById('contextContent').textContent = data.context;
+                contextInfo.style.display = 'block';
+            } else {
+                contextInfo.style.display = 'none';
+            }
+
+            // 渲染结果列表
+            if (data.results && data.results.length > 0) {
+                resultsList.innerHTML = data.results.map((result, index) => 
+                    renderResultCard(result, index)
+                ).join('');
+            } else {
+                resultsList.innerHTML = '<div class="result-card"><div class="result-content">未找到相关结果</div></div>';
+            }
+
+            // 显示 LLM 回答（仅 generate 类型）
+            const answerSection = document.getElementById('answerSection');
+            if (type === 'generate' && data.answer) {
+                document.getElementById('answerContent').textContent = data.answer;
+                
+                // 显示引用来源
+                const sourcesList = document.getElementById('sourcesList');
+                if (data.sources && data.sources.length > 0) {
+                    sourcesList.innerHTML = '<h3 style="margin: 15px 0 10px; color: #2e7d32; font-size: 14px;">引用来源</h3>' +
+                        data.sources.map(source => `
+                            <div class="source-item">
+                                <div class="source-header">
+                                    <div class="source-id">[${source.chunk_id}]</div>
+                                    <div class="source-score">${(source.score * 100).toFixed(1)}%</div>
+                                </div>
+                                <div class="source-content">${escapeHtml(source.content)}</div>
+                            </div>
+                        `).join('');
+                } else {
+                    sourcesList.innerHTML = '';
+                }
+                
+                // 显示系统提示词
+                if (data.system_prompt) {
+                    const systemPromptCard = document.createElement('div');
+                    systemPromptCard.className = 'result-card';
+                    systemPromptCard.style.cssText = 'border-left-color: #9c27b0; margin-top: 15px;';
+                    systemPromptCard.innerHTML = `
+                        <div class="result-title">🔧 系统提示词</div>
+                        <div class="result-content" style="margin-top: 10px; white-space: pre-wrap; font-size: 13px; max-height: 300px; overflow-y: auto;">${escapeHtml(data.system_prompt)}</div>
+                    `;
+                    answerSection.appendChild(systemPromptCard);
+                }
+                
+                answerSection.style.display = 'block';
+            } else {
+                answerSection.style.display = 'none';
+            }
+
+            // 显示 JSON 响应
+            jsonOutput.textContent = formatJSON(data);
+
+            // 显示结果区域
+            resultsSection.style.display = 'block';
+        }
+
+        // 清空结果
+        function clearResults() {
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('statsSection').style.display = 'none';
+            document.getElementById('errorMessage').classList.remove('active');
+            document.getElementById('query').value = '';
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('RAG 查询测试页面已加载');
+        });
+    </script>
+</body>
+</html>

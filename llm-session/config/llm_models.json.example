@@ -1,0 +1,139 @@
+{
+  "providers": [
+    {
+      "name": "火山引擎-豆包",
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
+      "apiKey": "${VOLCES_API_KEY}",
+      "api": "openai-completions",
+      "priority": 1,
+      "models": [
+        {
+          "id": "doubao-seed-1-6-lite-251015",
+          "name": "Doubao Seed 1.6 Lite",
+          "tier": "small",
+          "enabled": true,
+          "reasoning": false,
+          "input": ["text", "image"],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 128000,
+          "maxTokens": 96000,
+          "dailyTokenLimit": 1000000,
+          "timeout": 60
+        },
+        {
+          "id": "doubao-seed-1-6-pro-251015",
+          "name": "Doubao Seed 1.6 Pro",
+          "tier": "large",
+          "enabled": true,
+          "reasoning": true,
+          "input": ["text", "image"],
+          "cost": {
+            "input": 0.008,
+            "output": 0.02,
+            "cacheRead": 0.004,
+            "cacheWrite": 0.008
+          },
+          "contextWindow": 256000,
+          "maxTokens": 131072,
+          "dailyTokenLimit": 500000,
+          "timeout": 120
+        }
+      ]
+    },
+    {
+      "name": "OpenAI",
+      "baseUrl": "https://api.openai.com/v1",
+      "apiKey": "${OPENAI_API_KEY}",
+      "api": "openai-completions",
+      "priority": 2,
+      "models": [
+        {
+          "id": "gpt-4o-mini",
+          "name": "GPT-4o Mini",
+          "tier": "medium",
+          "enabled": true,
+          "reasoning": false,
+          "input": ["text", "image"],
+          "cost": {
+            "input": 0.00015,
+            "output": 0.0006,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 128000,
+          "maxTokens": 16384,
+          "dailyTokenLimit": 100000,
+          "timeout": 60
+        },
+        {
+          "id": "gpt-4o",
+          "name": "GPT-4o",
+          "tier": "large",
+          "enabled": true,
+          "reasoning": false,
+          "input": ["text", "image"],
+          "cost": {
+            "input": 0.0025,
+            "output": 0.01,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 128000,
+          "maxTokens": 16384,
+          "dailyTokenLimit": 50000,
+          "timeout": 90
+        }
+      ]
+    },
+    {
+      "name": "Anthropic Claude",
+      "baseUrl": "https://api.anthropic.com",
+      "apiKey": "${ANTHROPIC_API_KEY}",
+      "api": "anthropic-messages",
+      "priority": 3,
+      "models": [
+        {
+          "id": "claude-3-haiku-20240307",
+          "name": "Claude 3 Haiku",
+          "tier": "small",
+          "enabled": true,
+          "reasoning": false,
+          "input": ["text", "image"],
+          "cost": {
+            "input": 0.00025,
+            "output": 0.00125,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 4096,
+          "dailyTokenLimit": 200000,
+          "timeout": 60
+        },
+        {
+          "id": "claude-3-sonnet-20240229",
+          "name": "Claude 3 Sonnet",
+          "tier": "large",
+          "enabled": true,
+          "reasoning": false,
+          "input": ["text", "image"],
+          "cost": {
+            "input": 0.003,
+            "output": 0.015,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 4096,
+          "dailyTokenLimit": 100000,
+          "timeout": 120
+        }
+      ]
+    }
+  ]
+}
